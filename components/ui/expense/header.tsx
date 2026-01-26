@@ -42,7 +42,7 @@ export default function Header({
             <Ionicons
               name={viewMode === "weekly" ? "pie-chart" : "bar-chart"}
               size={20}
-              color="#2563eb"
+              color="#7c3aed"
             />
           </TouchableOpacity>
 
@@ -114,15 +114,14 @@ const styles = StyleSheet.create({
   avatarContainer: {
     width: 32,
     height: 32,
-    backgroundColor: "#dbeafe",
-    borderRadius: 16,
+    backgroundColor: "#f3f4f6",
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#bfdbfe",
+    borderColor: "#7c3aed",
   },
   avatarText: {
-    color: "#2563eb",
+    color: "#7c3aed",
     fontWeight: "bold",
     fontSize: 12,
   },

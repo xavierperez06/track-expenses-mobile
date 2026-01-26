@@ -393,6 +393,8 @@ export default function AddExpenseModal({
                 display={Platform.OS === "ios" ? "inline" : "default"}
                 onChange={onDateChange}
                 style={styles.iosDatePicker}
+                accentColor="#7c3aed"
+                textColor="#7c3aed"
               />
             )}
 
@@ -503,7 +505,7 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   inputFocused: {
-    borderColor: "#2563eb",
+    borderColor: "#7c3aed",
     backgroundColor: "#fff",
   },
   inputError: {
@@ -562,13 +564,13 @@ const styles = StyleSheet.create({
   },
   dateBtnActive: {
     flex: 1,
-    backgroundColor: "#eff6ff",
+    backgroundColor: "#f5f2fa",
     padding: 10,
     borderRadius: 8,
     alignItems: "center",
   },
   dateBtnText: { color: "#6b7280", fontWeight: "bold", fontSize: 12 },
-  dateBtnTextActive: { color: "#2563eb", fontWeight: "bold", fontSize: 12 },
+  dateBtnTextActive: { color: "#7c3aed", fontWeight: "bold", fontSize: 12 },
   colorGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   colorCircle: { width: 44, height: 44, borderRadius: 22 },
   activeBorder: { borderWidth: 3, borderColor: "#000" },
@@ -581,7 +583,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   saveBtn: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#7c3aed",
     padding: 18,
     borderRadius: 16,
     alignItems: "center",

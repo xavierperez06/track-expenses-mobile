@@ -6,13 +6,10 @@ import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInpu
 
 // Imports from local files
 import AddExpenseModal from '../../components/ui/expense/expense-modal';
-import { auth, db } from '../../config/firebase';
-
 import Header from '../../components/ui/expense/header';
-
 import MonthlySummary from '../../components/ui/expense/montly-summary';
-
 import WeeklyChart from '../../components/ui/expense/weekly-chart';
+import { auth, db } from '../../config/firebase';
 
 // @ts-ignore
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'my-expense-app-v1';
@@ -272,7 +269,7 @@ const styles = StyleSheet.create({
   budgetInput: { backgroundColor: '#f3f4f6', width: '100%', borderRadius: 12, padding: 16, fontSize: 24, textAlign: 'center', fontWeight: 'bold', marginBottom: 24 },
   modalButtons: { flexDirection: 'row', gap: 12, width: '100%' },
   cancelButton: { flex: 1, padding: 12, alignItems: 'center' },
-  saveButton: { flex: 1, padding: 12, backgroundColor: '#2563eb', borderRadius: 12, alignItems: 'center' },
+  saveButton: { flex: 1, padding: 12, backgroundColor: '#7c3aed', borderRadius: 12, alignItems: 'center' },
   cancelText: { color: '#6b7280', fontWeight: 'bold' },
   saveText: { color: '#fff', fontWeight: 'bold' }
 });

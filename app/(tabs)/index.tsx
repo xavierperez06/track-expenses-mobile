@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
-import { addDoc, collection, doc, onSnapshot, query, setDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, onSnapshot, query, setDoc, writeBatch } from 'firebase/firestore';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 // Imports from local files
+import { Category } from '@/interfaces/category';
 import AddExpenseModal from '../../components/ui/expense/expense-modal';
 import Header from '../../components/ui/expense/header';
 import MonthlySummary from '../../components/ui/expense/montly-summary';
@@ -13,6 +14,19 @@ import { auth, db } from '../../config/firebase';
 
 // @ts-ignore
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'my-expense-app-v1';
+
+const DEFAULT_CATEGORIES: Category[] = [
+  { name: "Alimentación", hex: "#ea580c", iconName: "fast-food" },
+  { name: "Supermercado", hex: "#10b981", iconName: "cart" },
+  { name: "Casa", hex: "#4f46e5", iconName: "home" },
+  { name: "Salud", hex: "#dc2626", iconName: "medical" },
+  { name: "Juno", hex: "#172c3d", iconName: "paw" },
+  { name: "Salidas", hex: "#9333ea", iconName: "pizza" },
+  { name: "Gastos fijos", hex: "#ebcf34", iconName: "receipt" },
+  { name: "Vacaciones", hex: "#9bc7b5", iconName: "airplane" },
+  { name: "Transporte", hex: "#472247", iconName: "car" },
+  { name: "Otros", hex: "#4b5563", iconName: "cash" },
+];
 
 export default function HomeScreen() {
   const [user, setUser] = useState<any>(null);
@@ -46,9 +60,26 @@ export default function HomeScreen() {
     if (!user) return;
 
     const categoriesRef = collection(db, 'artifacts', appId, 'users', user.uid, 'categories');
-    const unsubCategories = onSnapshot(query(categoriesRef), (snapshot) => {
-      setCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    });
+    const unsubCategories = onSnapshot(
+      query(categoriesRef),
+      async (snapshot) => {
+        if (snapshot.empty) {
+          // Seed defaults if account is fresh
+          const batch = writeBatch(db);
+          DEFAULT_CATEGORIES.forEach((cat) => {
+            const newDoc = doc(categoriesRef);
+            batch.set(newDoc, cat);
+          });
+          await batch.commit();
+        } else {
+          const loaded = snapshot.docs.map(
+            (doc) => ({ id: doc.id, ...doc.data() }) as Category,
+          );
+          setCategories(loaded);
+        }
+      },
+      (err) => console.error("Categories permission error:", err),
+    );
 
     const expensesRef = collection(db, 'artifacts', appId, 'users', user.uid, 'expenses');
     const unsubExpenses = onSnapshot(query(expensesRef), (snapshot) => {

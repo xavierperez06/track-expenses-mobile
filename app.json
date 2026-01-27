@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "track-expenses",
+    "name": "Xpenses",
     "slug": "track-expenses",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/xpense-icon.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "trackexpenses",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,11 +13,12 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/xpense-icon.png",
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.xperez.xpenses",
+      "googleServicesFile": "./google-services.json",
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -26,6 +27,7 @@
     },
     "plugins": [
       "expo-router",
+      "@react-native-google-signin/google-signin",
       [
         "expo-splash-screen",
         {

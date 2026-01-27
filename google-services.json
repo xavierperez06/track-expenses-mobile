@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "640825514836",
+    "project_id": "my-track-expenses",
+    "storage_bucket": "my-track-expenses.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:640825514836:android:c84fe424267bb3002fc6c1",
+        "android_client_info": {
+          "package_name": "com.xperez.xpenses"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "640825514836-1jqv66cfukq8t1ld1hbum0d2ndvtfvtf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.xperez.xpenses",
+            "certificate_hash": "d09f4518fc91de6a6b34054abbbff65deac6c5b6"
+          }
+        },
+        {
+          "client_id": "640825514836-887ndoranr487tva5ajv23h16jlvh4jt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjcAs2MS4XLNLTfw6vTa6x8bSMALkaFhg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "640825514836-5ftbuuld03ebd8crkf14lalcvg4bojs5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

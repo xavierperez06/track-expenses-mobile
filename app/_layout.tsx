@@ -1,7 +1,5 @@
 import { auth } from "@/config/firebase"; // Ensure this path is correct
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
-  DarkTheme,
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
@@ -18,20 +16,19 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [user, setUser] = useState<User | null>(null);
   const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
+    // onAuthStateChanged triggers AUTOMATICALLY when Firebase reads 
+    // the saved session from AsyncStorage
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       if (initializing) setInitializing(false);
     });
-
     return unsubscribe;
   }, []);
 
-  // 1. Show a loading spinner while Firebase connects
   if (initializing) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -48,7 +45,7 @@ export default function RootLayout() {
 
   // 3. If user exists, show the App (Tabs + Modal)
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen

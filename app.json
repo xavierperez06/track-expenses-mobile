@@ -17,6 +17,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
+      "package": "com.xperez.xpenses",
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -66,6 +67,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a6301dcc-162b-4db3-958e-37235e87a43b"
+      }
     }
   }
 }

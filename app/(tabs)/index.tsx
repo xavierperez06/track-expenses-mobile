@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -274,7 +275,7 @@ export default function HomeScreen() {
         onLogout={() => auth.signOut()}
       />
 
-      <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: 120 }}>
         {viewMode === 'weekly' ? (
           <WeeklyChart 
             data={weeklyData} 
@@ -311,7 +312,7 @@ export default function HomeScreen() {
           <View style={{ alignItems: 'flex-end' }}>
             <Text style={styles.amount}>-${expense.amount.toFixed(2)}</Text>
             <Text style={styles.dateText}>
-              {new Date(expense.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
+              {new Date(expense.date).toLocaleDateString("es-AR", { day: '2-digit', month: 'short' })}
             </Text>
           </View>
 
@@ -363,12 +364,6 @@ export default function HomeScreen() {
         </View>
       </Modal>
 
-      <View style={styles.fabContainer}>
-        <TouchableOpacity style={styles.fab} onPress={openNewModal}>
-          <Ionicons name="add" size={32} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
       <AddExpenseModal
         visible={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -379,6 +374,35 @@ export default function HomeScreen() {
         categories={categories}
         expenseToEdit={editingExpense}
       />
+      <View style={styles.dockWrapper} pointerEvents="box-none">
+  <View style={styles.dockBackground}>
+    {/* Home/Summary Icon */}
+    <TouchableOpacity style={styles.dockItem}>
+      <Ionicons name="home" size={22} color="#7c3aed" />
+    </TouchableOpacity>
+
+    {/* Main Action - Centered & Elevated */}
+    <TouchableOpacity 
+      style={styles.dockMainButton} 
+      onPress={() => setIsAddModalOpen(true)}
+      activeOpacity={0.9}
+    >
+      <LinearGradient
+        colors={['#8b5cf6', '#ec4899']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.dockGradient}
+      >
+        <Ionicons name="add" size={30} color="#fff" />
+      </LinearGradient>
+    </TouchableOpacity>
+
+    {/* Settings or History Icon */}
+    <TouchableOpacity style={styles.dockItem} onPress={() => setIsBudgetModalOpen(true)}>
+      <Ionicons name="options-outline" size={22} color="#94a3b8" />
+    </TouchableOpacity>
+  </View>
+</View>
     </View>
   );
 }
@@ -418,5 +442,54 @@ const styles = StyleSheet.create({
   deleteBtn: {
     padding: 8,
     marginLeft: 4,
+  },
+// Dock Container
+  dockWrapper: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    pointerEvents: 'box-none',
+  },
+  dockBackground: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)', // Frosted glass effect
+    width: '70%',
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    // Premium Shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  dockItem: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dockMainButton: {
+    marginTop: -40, // Pops the button out of the dock
+    shadowColor: '#ec4899',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+  },
+  dockGradient: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

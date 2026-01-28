@@ -213,13 +213,13 @@ export default function AddExpenseModal({
             >
               <Ionicons name="arrow-back" size={24} color="#4b5563" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>New Category</Text>
+            <Text style={styles.headerTitle}>Nueva categoría</Text>
             <View style={{ width: 40 }} />
           </View>
 
           <ScrollView contentContainerStyle={styles.content}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>NAME</Text>
+              <Text style={styles.label}>NOMBRE</Text>
               <TextInput
                 style={styles.textInput}
                 value={newCatName}
@@ -247,7 +247,7 @@ export default function AddExpenseModal({
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>ICON</Text>
+              <Text style={styles.label}>ICONO</Text>
               <View style={styles.iconGrid}>
                 {AVAILABLE_ICONS.map((icon) => (
                   <TouchableOpacity
@@ -275,7 +275,7 @@ export default function AddExpenseModal({
               onPress={handleCreateCategory}
               disabled={!newCatName.trim()}
             >
-              <Text style={styles.saveBtnText}>Create Category</Text>
+              <Text style={styles.saveBtnText}>Crear Categoría</Text>
             </TouchableOpacity>
           </ScrollView>
         </SafeAreaView>
@@ -291,7 +291,7 @@ export default function AddExpenseModal({
     >
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Add Expense</Text>
+          <Text style={styles.headerTitle}>Agregar Gasto</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
             <Ionicons name="close" size={24} color="#000" />
           </TouchableOpacity>
@@ -299,7 +299,7 @@ export default function AddExpenseModal({
 
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>AMOUNT</Text>
+            <Text style={styles.label}>MONTO</Text>
             <View style={styles.amountContainer}>
               <Text style={styles.currencySymbol}>$</Text>
               <TextInput
@@ -318,7 +318,7 @@ export default function AddExpenseModal({
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>CATEGORY</Text>
+            <Text style={styles.label}>CATEGORÍA</Text>
             <View style={styles.categoryGrid}>
               {categories.map((cat, idx) => {
                 const isSelected = selectedCategory === cat.name;
@@ -369,13 +369,13 @@ export default function AddExpenseModal({
                 onPress={() => setShowCategoryCreator(true)}
               >
                 <Ionicons name="add" size={16} color="#9ca3af" />
-                <Text style={[styles.catText, { color: "#9ca3af" }]}>New</Text>
+                <Text style={[styles.catText, { color: "#9ca3af" }]}>Nueva</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>DATE</Text>
+            <Text style={styles.label}>FECHA</Text>
             <TouchableOpacity
               style={styles.textInput}
               onPress={() => setShowDatePicker(true)}
@@ -412,7 +412,7 @@ export default function AddExpenseModal({
                       : styles.dateBtnText
                   }
                 >
-                  Today
+                  Hoy
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -430,14 +430,14 @@ export default function AddExpenseModal({
                       : styles.dateBtnText
                   }
                 >
-                  Yesterday
+                  Ayer
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>DESCRIPTION</Text>
+            <Text style={styles.label}>DESCRIPCIÓN</Text>
             <TextInput
               style={[
                 styles.textInput,
@@ -451,12 +451,12 @@ export default function AddExpenseModal({
               onBlur={() => setIsDescriptionFocused(false)}
             />
             {showDescriptionError && (
-              <Text style={styles.errorText}>Description required</Text>
+              <Text style={styles.errorText}>Descripción requerida</Text>
             )}
           </View>
 
           <TouchableOpacity style={styles.saveBtn} onPress={handleSubmit}>
-            <Text style={styles.saveBtnText}>Save Expense</Text>
+            <Text style={styles.saveBtnText}>Guardar Gasto</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>

@@ -30,7 +30,7 @@ export default function Header({
         <View>
           <Text style={styles.subtitle}>
             {viewMode === "monthly"
-              ? currentDate.toLocaleString("default", {
+              ? currentDate.toLocaleString("es-ES", {
                   month: "long",
                   year: "numeric",
                 })
@@ -63,7 +63,7 @@ export default function Header({
         {/* Main Balance */}
         <View>
           <View style={styles.labelRow}>
-            <Text style={styles.label}>BALANCE</Text>
+            <Text style={styles.label}>Balance</Text>
             <TouchableOpacity onPress={onEditBudget} style={styles.editButton}>
               <Ionicons name="pencil" size={12} color="#6b7280" />
             </TouchableOpacity>
@@ -74,7 +74,7 @@ export default function Header({
         {/* Expenses Side-car */}
         <View>
           <View style={styles.labelRow}>
-            <Text style={styles.label}>SPENT</Text>
+            <Text style={styles.label}>Gastado</Text>
           </View>
           <Text style={styles.spentText}>-${spent.toFixed(2)}</Text>
         </View>

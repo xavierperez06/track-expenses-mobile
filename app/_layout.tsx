@@ -20,14 +20,15 @@ export default function RootLayout() {
   const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
-    // onAuthStateChanged triggers AUTOMATICALLY when Firebase reads 
-    // the saved session from AsyncStorage
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      if (initializing) setInitializing(false);
-    });
-    return unsubscribe;
-  }, []);
+  // onAuthStateChanged triggers when Firebase reads the saved session
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    setUser(user);
+    // Only set initializing to false once we have received the first auth response
+    setInitializing(false);
+  });
+
+  return unsubscribe;
+}, []);
 
   if (initializing) {
     return (

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
-import { addDoc, collection, doc, onSnapshot, query, setDoc, writeBatch } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, onSnapshot, query, setDoc, writeBatch } from 'firebase/firestore';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -172,6 +172,30 @@ export default function HomeScreen() {
     }
   };
 
+  const handleDeleteExpense = (id: string) => {
+  if (!user) return;
+
+  Alert.alert(
+    "Delete Transaction",
+    "Are you sure you want to delete this expense?",
+    [
+      { text: "Cancel", style: "cancel" },
+      { 
+        text: "Delete", 
+        style: "destructive", 
+        onPress: async () => {
+          try {
+            await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'expenses', id));
+          } catch (error) {
+            console.error("Error deleting expense:", error);
+            Alert.alert("Error", "Could not delete the expense.");
+          }
+        } 
+      },
+    ]
+  );
+};
+
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2563eb" /></View>;
 
   return (
@@ -205,27 +229,40 @@ export default function HomeScreen() {
         )}
 
         <View style={styles.listSection}>
-          <Text style={styles.sectionTitle}>Recent Transactions</Text>
+          <Text style={styles.sectionTitle}>Transacciones recientes</Text>
           {expenses.slice(0, 15).map((expense) => {
             const cat = categories.find(c => c.name === expense.category);
-            return (
-              <View key={expense.id} style={styles.card}>
-                <View style={styles.cardLeft}>
-                  <View style={[styles.iconBox, { backgroundColor: `${cat?.hex || '#2563eb'}20` }]}>
-                    <Ionicons name={(cat?.iconName || 'pricetag') as any} size={20} color={cat?.hex || '#2563eb'} />
-                  </View>
-                  <View>
-                    <Text style={styles.cardTitle}>{expense.category}</Text>
-                    <Text style={styles.cardDesc}>{expense.description}</Text>
-                  </View>
-                </View>
-                <View style={styles.cardRight}>
-                  <Text style={styles.amount}>-${expense.amount.toFixed(2)}</Text>
-                  <Text style={styles.dateText}>{new Date(expense.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}</Text>
-                </View>
-              </View>
-            );
-          })}
+  return (
+    <View key={expense.id} style={styles.card}>
+      <View style={styles.cardLeft}>
+        <View style={[styles.iconBox, { backgroundColor: `${cat?.hex || '#2563eb'}20` }]}>
+          <Ionicons name={(cat?.iconName || 'pricetag') as any} size={20} color={cat?.hex || '#2563eb'} />
+        </View>
+        <View>
+          <Text style={styles.cardTitle}>{expense.category}</Text>
+          <Text style={styles.cardDesc}>{expense.description}</Text>
+        </View>
+      </View>
+      <View style={styles.cardRight}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={styles.amount}>-${expense.amount.toFixed(2)}</Text>
+            <Text style={styles.dateText}>
+              {new Date(expense.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
+            </Text>
+          </View>
+          {/* Add Delete Button */}
+          <TouchableOpacity 
+            onPress={() => handleDeleteExpense(expense.id)}
+            style={styles.deleteBtn}
+          >
+            <Ionicons name="trash-outline" size={20} color="#ef4444" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+})}
         </View>
       </ScrollView>
 
@@ -233,7 +270,7 @@ export default function HomeScreen() {
       <Modal visible={isBudgetModalOpen} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.budgetModal}>
-            <Text style={styles.modalTitle}>Set Monthly Budget</Text>
+            <Text style={styles.modalTitle}>Configurar presupuesto mensual</Text>
             <TextInput
               style={styles.budgetInput}
               keyboardType="numeric"
@@ -244,10 +281,10 @@ export default function HomeScreen() {
             />
             <View style={styles.modalButtons}>
               <TouchableOpacity onPress={() => setIsBudgetModalOpen(false)} style={styles.cancelButton}>
-                <Text style={styles.cancelText}>Cancel</Text>
+                <Text style={styles.cancelText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleSaveBudget} style={styles.saveButton}>
-                <Text style={styles.saveText}>Save</Text>
+                <Text style={styles.saveText}>Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -302,5 +339,9 @@ const styles = StyleSheet.create({
   cancelButton: { flex: 1, padding: 12, alignItems: 'center' },
   saveButton: { flex: 1, padding: 12, backgroundColor: '#7c3aed', borderRadius: 12, alignItems: 'center' },
   cancelText: { color: '#6b7280', fontWeight: 'bold' },
-  saveText: { color: '#fff', fontWeight: 'bold' }
+  saveText: { color: '#fff', fontWeight: 'bold' },
+  deleteBtn: {
+    padding: 8,
+    marginLeft: 4,
+  },
 });

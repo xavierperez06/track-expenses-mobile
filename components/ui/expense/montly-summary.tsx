@@ -60,13 +60,13 @@ export default function MonthlySummary({
           style={[styles.toggleBtn, periodMode === 'month' && styles.toggleBtnActive]}
           onPress={() => onTogglePeriod('month')}
         >
-          <Text style={[styles.toggleText, periodMode === 'month' && styles.toggleTextActive]}>Month</Text>
+          <Text style={[styles.toggleText, periodMode === 'month' && styles.toggleTextActive]}>Mes</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={[styles.toggleBtn, periodMode === 'year' && styles.toggleBtnActive]}
           onPress={() => onTogglePeriod('year')}
         >
-          <Text style={[styles.toggleText, periodMode === 'year' && styles.toggleTextActive]}>Year</Text>
+          <Text style={[styles.toggleText, periodMode === 'year' && styles.toggleTextActive]}>Año</Text>
         </TouchableOpacity>
       </View>
 
@@ -107,7 +107,7 @@ export default function MonthlySummary({
               </Svg>
             )}
             <View style={styles.chartHole}>
-              <Text style={styles.totalLabel}>{periodMode === 'year' ? 'YEAR TOTAL' : 'TOTAL'}</Text>
+              <Text style={styles.totalLabel}>{periodMode === 'year' ? 'TOTAL ANUAL' : 'TOTAL'}</Text>
               <Text style={styles.totalAmount}>${statsData.total.toFixed(0)}</Text>
             </View>
           </View>
@@ -136,7 +136,7 @@ export default function MonthlySummary({
               </View>
             ))
           ) : (
-            <Text style={styles.emptyText}>No data for this {periodMode}</Text>
+            <Text style={styles.emptyText}>No hay datos para éste periodo: {periodMode}</Text>
           )}
         </View>
       </View>
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   toggleBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 10 },
   toggleBtnActive: { backgroundColor: '#fff', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
   toggleText: { fontSize: 14, fontWeight: '600', color: '#6b7280' },
-  toggleTextActive: { color: '#2563eb' },
+  toggleTextActive: { color: '#7c3aed' },
   card: { backgroundColor: '#fff', borderRadius: 24, padding: 24, borderWidth: 1, borderColor: '#f3f4f6' },
   navRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   navButton: { padding: 10, backgroundColor: '#f9fafb', borderRadius: 20 },

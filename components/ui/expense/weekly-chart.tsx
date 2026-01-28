@@ -32,7 +32,7 @@ export default function WeeklyChart({ data, maxSpend, totalSpending }: WeeklyCha
       <View style={styles.content}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Weekly Spending</Text>
+            <Text style={styles.title}>Gastos semanales</Text>
             <Text style={styles.total}>${totalSpending.toFixed(2)}</Text>
           </View>
           <View style={styles.iconContainer}>

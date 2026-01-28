@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -153,7 +154,7 @@ export default function AddExpenseModal({
               <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 <View style={[
                   styles.amountContainer, 
-                  isAmountFocused && { borderColor: "#7c3aed", backgroundColor: "#7c3aed" + '05' }
+                  isAmountFocused && { borderColor: "#7c3aed", backgroundColor: "#7c3aed05" }
                 ]}>
                   <Text style={[styles.currency, { color: "#7c3aed" }]}>$</Text>
                   <TextInput
@@ -222,8 +223,15 @@ export default function AddExpenseModal({
               </ScrollView>
 
               <View style={styles.footer}>
-                <TouchableOpacity style={[styles.saveBtn, { backgroundColor: "#7c3aed" }]} onPress={handleSave}>
-                  <Text style={styles.saveText}>{expenseToEdit ? "Actualizar" : "Guardar"}</Text>
+                <TouchableOpacity onPress={handleSave} activeOpacity={0.8}>
+                  <LinearGradient
+                    colors={['#8b5cf6', '#ec4899']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.saveBtn}
+                  >
+                    <Text style={styles.saveText}>{expenseToEdit ? "Actualizar" : "Guardar"}</Text>
+                  </LinearGradient>
                 </TouchableOpacity>
               </View>
             </View>
@@ -257,7 +265,16 @@ export default function AddExpenseModal({
             
             <View style={styles.subActionRow}>
               <TouchableOpacity onPress={() => setShowCategoryCreator(false)}><Text style={{ color: '#64748b', fontWeight: '600' }}>Cancelar</Text></TouchableOpacity>
-              <TouchableOpacity style={[styles.miniSaveBtn, { backgroundColor: "#7c3aed" }]} onPress={handleSaveCategory}><Text style={{ color: '#fff', fontWeight: '700' }}>Crear</Text></TouchableOpacity>
+              <TouchableOpacity onPress={handleSaveCategory} activeOpacity={0.8}>
+                <LinearGradient
+                  colors={['#8b5cf6', '#ec4899']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.miniSaveBtn}
+                >
+                  <Text style={{ color: '#fff', fontWeight: '700' }}>Crear</Text>
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -293,7 +310,7 @@ const styles = StyleSheet.create({
   formRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   textInput: { flex: 1, fontSize: 15, color: '#1e293b', fontWeight: '500' },
   footer: { paddingTop: 10, backgroundColor: '#fff' },
-  saveBtn: { height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
+  saveBtn: { height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
   saveText: { color: '#fff', fontSize: 18, fontWeight: '700' },
   subOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
   subCard: { backgroundColor: '#fff', width: '85%', borderRadius: 24, padding: 24 },

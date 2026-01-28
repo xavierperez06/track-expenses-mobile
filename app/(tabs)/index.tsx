@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
-import { addDoc, collection, deleteDoc, doc, onSnapshot, query, setDoc, writeBatch } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, onSnapshot, query, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -34,6 +34,7 @@ export default function HomeScreen() {
   const [categories, setCategories] = useState<any[]>([]);
   const [monthlyBudget, setMonthlyBudget] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [editingExpense, setEditingExpense] = useState<any>(null);
   
   // UI State
   const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
@@ -155,6 +156,20 @@ export default function HomeScreen() {
   const handleAddExpense = async (newExpense: any) => {
     if (!user) return;
     await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'expenses'), newExpense);
+    setIsAddModalOpen(false);
+  };
+
+  // New Handler for Updating
+  const handleUpdateExpense = async (id: string, updatedExpense: any) => {
+    if (!user) return;
+    try {
+      const expenseRef = doc(db, 'artifacts', appId, 'users', user.uid, 'expenses', id);
+      await updateDoc(expenseRef, updatedExpense);
+      setEditingExpense(null); // Clear editing state
+    } catch (error) {
+      console.error("Error updating expense:", error);
+      Alert.alert("Error", "Could not update the expense.");
+    }
   };
 
   const handleAddCategory = async (newCategory: any) => {
@@ -170,6 +185,16 @@ export default function HomeScreen() {
     } else {
       Alert.alert("Invalid input", "Please enter a valid number");
     }
+  };
+
+  const openEditModal = (expense: any) => {
+    setEditingExpense(expense);
+    setIsAddModalOpen(true);
+  };
+
+  const openNewModal = () => {
+    setEditingExpense(null);
+    setIsAddModalOpen(true);
   };
 
   const handleDeleteExpense = (id: string) => {
@@ -251,6 +276,15 @@ export default function HomeScreen() {
               {new Date(expense.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
             </Text>
           </View>
+
+          {/* EDIT BUTTON */}
+                    <TouchableOpacity 
+                      onPress={() => openEditModal(expense)}
+                      style={[styles.deleteBtn, { marginRight: -8 }]} // Adjust styling as needed
+                    >
+                      <Ionicons name="pencil-outline" size={20} color="#7c3aed" />
+                    </TouchableOpacity>
+                    
           {/* Add Delete Button */}
           <TouchableOpacity 
             onPress={() => handleDeleteExpense(expense.id)}
@@ -292,7 +326,7 @@ export default function HomeScreen() {
       </Modal>
 
       <View style={styles.fabContainer}>
-        <TouchableOpacity style={styles.fab} onPress={() => setIsAddModalOpen(true)}>
+        <TouchableOpacity style={styles.fab} onPress={openNewModal}>
           <Ionicons name="add" size={32} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -301,8 +335,10 @@ export default function HomeScreen() {
         visible={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddExpense}
+        onUpdate={handleUpdateExpense}
         onAddCategory={handleAddCategory}
         categories={categories}
+        expenseToEdit={editingExpense}
       />
     </View>
   );

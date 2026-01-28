@@ -1,3 +1,5 @@
+import { Category } from "@/interfaces/category";
+import { Expense } from "@/interfaces/expense";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -16,18 +18,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface Category {
-  name: string;
-  hex: string;
-  iconName?: string;
-}
-
 interface AddExpenseModalProps {
   visible: boolean;
   onClose: () => void;
-  onAdd: (expense: any) => void;
+  onAdd: (expense: Expense) => void;
+  onUpdate?: (id: string, expense: Expense) => void;
   onAddCategory: (category: Category) => void;
   categories: Category[];
+  expenseToEdit?:Expense;
 }
 
 // Helper functions for date formatting moved outside to ensure consistency
@@ -86,8 +84,10 @@ export default function AddExpenseModal({
   visible,
   onClose,
   onAdd,
+  onUpdate,
   onAddCategory,
   categories,
+  expenseToEdit,
 }: AddExpenseModalProps) {
   // Main Form State
   const [amount, setAmount] = useState("");
@@ -117,6 +117,29 @@ export default function AddExpenseModal({
       }
     }
   }, [visible, categories]);
+
+  // Updated useEffect to handle Edit Mode
+  useEffect(() => {
+    if (visible) {
+      if (expenseToEdit) {
+        // Edit Mode: Pre-fill data
+        setAmount(expenseToEdit.amount.toString());
+        setDescription(expenseToEdit.description);
+        setDate(formatDate(new Date(expenseToEdit.date))); // Ensure date is formatted correctly
+        setSelectedCategory(expenseToEdit.category);
+      } else {
+        // New Mode: Reset to defaults
+        const now = new Date();
+        setDate(formatDate(now));
+        setAmount("");
+        setDescription("");
+        if (categories.length > 0) {
+          setSelectedCategory(categories[0].name);
+        }
+      }
+      setShowDescriptionError(false);
+    }
+  }, [visible, categories, expenseToEdit]);
 
   // Category Creator State
   const [showCategoryCreator, setShowCategoryCreator] = useState(false);
@@ -149,13 +172,12 @@ export default function AddExpenseModal({
   };
 
   const handleSubmit = () => {
-    // Validation 1: Description cannot be empty (inline validation)
+    // Validation
     if (!description.trim()) {
       setShowDescriptionError(true);
       return;
     }
 
-    // Validation 2: Check if amount is a valid number
     const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount) || numericAmount <= 0) {
       Alert.alert(
@@ -167,12 +189,18 @@ export default function AddExpenseModal({
     }
 
     const expenseDate = parseDateString(date);
-    onAdd({
+    const expenseData = {
       amount: numericAmount,
       description: description.trim(),
       category: selectedCategory,
       date: expenseDate.toISOString(),
-    });
+    };
+
+    if (expenseToEdit && onUpdate) {
+      onUpdate(expenseToEdit.id!, expenseData);
+    } else {
+      onAdd(expenseData);
+    }
 
     onClose();
   };
@@ -291,7 +319,7 @@ export default function AddExpenseModal({
     >
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Agregar Gasto</Text>
+          <Text style={styles.headerTitle}>{expenseToEdit ? "Editar Gasto" : "Agregar Gasto"}</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
             <Ionicons name="close" size={24} color="#000" />
           </TouchableOpacity>
@@ -456,7 +484,9 @@ export default function AddExpenseModal({
           </View>
 
           <TouchableOpacity style={styles.saveBtn} onPress={handleSubmit}>
-            <Text style={styles.saveBtnText}>Guardar Gasto</Text>
+            <Text style={styles.saveBtnText}>
+              {expenseToEdit ? "Guardar Cambios" : "Guardar Gasto"}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>

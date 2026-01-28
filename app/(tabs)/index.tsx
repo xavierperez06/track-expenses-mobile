@@ -365,8 +365,13 @@ export default function HomeScreen() {
       </Modal>
 
       <AddExpenseModal
+        key={editingExpense ? `edit-${editingExpense.id}` : 'new-expense'}
         visible={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          // Give it a tiny delay to ensure the animation finishes before nulling
+          setTimeout(() => setEditingExpense(null), 100);
+        }}
         onAdd={handleAddExpense}
         onDeleteCategory={handleDeleteCategory}
         onUpdate={handleUpdateExpense}

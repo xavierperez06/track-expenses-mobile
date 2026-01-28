@@ -24,6 +24,7 @@ interface AddExpenseModalProps {
   onAdd: (expense: Expense) => void;
   onUpdate?: (id: string, expense: Expense) => void;
   onAddCategory: (category: Category) => void;
+  onDeleteCategory?: (categoryName: string) => void;
   categories: Category[];
   expenseToEdit?:Expense;
 }
@@ -74,7 +75,6 @@ const AVAILABLE_ICONS = [
   "construct",
   "star",
   "car",
-  "cafe",
   "card",
   "checkmark",
   "fitness",
@@ -86,6 +86,7 @@ export default function AddExpenseModal({
   onAdd,
   onUpdate,
   onAddCategory,
+  onDeleteCategory,
   categories,
   expenseToEdit,
 }: AddExpenseModalProps) {
@@ -230,6 +231,30 @@ export default function AddExpenseModal({
     setDate(formatDate(d));
   };
 
+  // NEW: Handler for Long Press
+  const handleLongPressCategory = (cat: Category) => {
+    if (!onDeleteCategory) return;
+
+    Alert.alert(
+      "Eliminar Categoría",
+      `¿Estás seguro de que quieres eliminar "${cat.name}"?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        { 
+          text: "Eliminar", 
+          style: "destructive", 
+          onPress: () => {
+            onDeleteCategory(cat.name);
+            // If the deleted category was selected, reset to first available
+            if (selectedCategory === cat.name) {
+              setSelectedCategory(categories[0]?.name || "");
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (showCategoryCreator) {
     return (
       <Modal visible={visible} animationType="fade" transparent={false}>
@@ -252,7 +277,7 @@ export default function AddExpenseModal({
                 style={styles.textInput}
                 value={newCatName}
                 onChangeText={setNewCatName}
-                placeholder="e.g. Gym, Travel"
+                placeholder="ej. Gym, Viajes"
                 autoFocus
               />
             </View>
@@ -368,6 +393,8 @@ export default function AddExpenseModal({
                           },
                     ]}
                     onPress={() => setSelectedCategory(cat.name)}
+                    onLongPress={() => handleLongPressCategory(cat)} 
+                    delayLongPress={500}
                   >
                     <Ionicons
                       name={(cat.iconName || "pricetag") as any}
@@ -474,7 +501,7 @@ export default function AddExpenseModal({
               ]}
               value={description}
               onChangeText={handleDescriptionChange}
-              placeholder="What was this for?"
+              placeholder="¿En que fué utilizado?"
               onFocus={() => setIsDescriptionFocused(true)}
               onBlur={() => setIsDescriptionFocused(false)}
             />

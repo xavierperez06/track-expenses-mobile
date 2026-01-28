@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
-import { addDoc, collection, deleteDoc, doc, onSnapshot, query, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -183,7 +183,45 @@ export default function HomeScreen() {
       await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'general'), { monthlyBudget: num }, { merge: true });
       setIsBudgetModalOpen(false);
     } else {
-      Alert.alert("Invalid input", "Please enter a valid number");
+      Alert.alert("Invalid input", "Por favor, ingrese un número válido");
+    }
+  };
+
+  // --- NEW: DELETE CATEGORY FUNCTION ---
+  const handleDeleteCategory = async (categoryName: string) => {
+    if (!user) return;
+    
+    // Optional: Prevent deleting "default" categories if you wish
+    if (categoryName === 'Other' || categoryName === 'General') {
+      Alert.alert("Action not allowed", "You cannot delete the default category.");
+      return;
+    }
+
+    try {
+      // 1. Query to find the document with this name
+      const q = query(
+        collection(db, 'artifacts', appId, 'users', user.uid, 'categories'),
+        where("name", "==", categoryName)
+      );
+      
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) {
+        Alert.alert("Error", "Categoría no encontrada.");
+        return;
+      }
+
+      // 2. Delete the found document(s)
+      snapshot.forEach(async (docSnap) => {
+        await deleteDoc(docSnap.ref);
+      });
+
+      // (Optional) You might want to update expenses that used this category to "Other"
+      // But for now, we just delete the category.
+
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      Alert.alert("Error", "Could not delete category.");
     }
   };
 
@@ -201,19 +239,19 @@ export default function HomeScreen() {
   if (!user) return;
 
   Alert.alert(
-    "Delete Transaction",
-    "Are you sure you want to delete this expense?",
+    "Eliminar transacción",
+    "¿Estás seguro que deseas eliminar éste gasto?",
     [
-      { text: "Cancel", style: "cancel" },
+      { text: "Cancelar", style: "cancel" },
       { 
-        text: "Delete", 
+        text: "Eliminar", 
         style: "destructive", 
         onPress: async () => {
           try {
             await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'expenses', id));
           } catch (error) {
             console.error("Error deleting expense:", error);
-            Alert.alert("Error", "Could not delete the expense.");
+            Alert.alert("Error", "No se pudo eliminar el gasto.");
           }
         } 
       },
@@ -335,6 +373,7 @@ export default function HomeScreen() {
         visible={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddExpense}
+        onDeleteCategory={handleDeleteCategory}
         onUpdate={handleUpdateExpense}
         onAddCategory={handleAddCategory}
         categories={categories}

@@ -44,6 +44,9 @@ export default function HomeScreen() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [tempBudget, setTempBudget] = useState('');
+  
+  // --- NEW: Pagination State ---
+  const [showAllExpenses, setShowAllExpenses] = useState(false);
 
   // 1. Auth Lifecycle
   useEffect(() => {
@@ -66,7 +69,6 @@ export default function HomeScreen() {
       query(categoriesRef),
       async (snapshot) => {
         if (snapshot.empty) {
-          // Seed defaults if account is fresh
           const batch = writeBatch(db);
           DEFAULT_CATEGORIES.forEach((cat) => {
             const newDoc = doc(categoriesRef);
@@ -160,16 +162,15 @@ export default function HomeScreen() {
     setIsAddModalOpen(false);
   };
 
-  // New Handler for Updating
   const handleUpdateExpense = async (id: string, updatedExpense: any) => {
     if (!user) return;
     try {
       const expenseRef = doc(db, 'artifacts', appId, 'users', user.uid, 'expenses', id);
       await updateDoc(expenseRef, updatedExpense);
-      setEditingExpense(null); // Clear editing state
+      setEditingExpense(null);
     } catch (error) {
       console.error("Error updating expense:", error);
-      Alert.alert("Error", "Could not update the expense.");
+      Alert.alert("Error", "No se pudo actualizar el gasto.");
     }
   };
 
@@ -184,45 +185,33 @@ export default function HomeScreen() {
       await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'general'), { monthlyBudget: num }, { merge: true });
       setIsBudgetModalOpen(false);
     } else {
-      Alert.alert("Invalid input", "Por favor, ingrese un número válido");
+      Alert.alert("Entrada inválida", "Por favor, ingrese un número válido");
     }
   };
 
-  // --- NEW: DELETE CATEGORY FUNCTION ---
   const handleDeleteCategory = async (categoryName: string) => {
     if (!user) return;
-    
-    // Optional: Prevent deleting "default" categories if you wish
     if (categoryName === 'Other' || categoryName === 'General') {
-      Alert.alert("Action not allowed", "You cannot delete the default category.");
+      Alert.alert("Acción no permitida", "No puedes eliminar las categorías por defecto.");
       return;
     }
 
     try {
-      // 1. Query to find the document with this name
       const q = query(
         collection(db, 'artifacts', appId, 'users', user.uid, 'categories'),
         where("name", "==", categoryName)
       );
-      
       const snapshot = await getDocs(q);
-      
       if (snapshot.empty) {
         Alert.alert("Error", "Categoría no encontrada.");
         return;
       }
-
-      // 2. Delete the found document(s)
       snapshot.forEach(async (docSnap) => {
         await deleteDoc(docSnap.ref);
       });
-
-      // (Optional) You might want to update expenses that used this category to "Other"
-      // But for now, we just delete the category.
-
     } catch (error) {
       console.error("Error deleting category:", error);
-      Alert.alert("Error", "Could not delete category.");
+      Alert.alert("Error", "No se pudo eliminar la categoría.");
     }
   };
 
@@ -237,28 +226,30 @@ export default function HomeScreen() {
   };
 
   const handleDeleteExpense = (id: string) => {
-  if (!user) return;
+    if (!user) return;
+    Alert.alert(
+      "Eliminar transacción",
+      "¿Estás seguro que deseas eliminar éste gasto?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { 
+          text: "Eliminar", 
+          style: "destructive", 
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'expenses', id));
+            } catch (error) {
+              console.error("Error deleting expense:", error);
+              Alert.alert("Error", "No se pudo eliminar el gasto.");
+            }
+          } 
+        },
+      ]
+    );
+  };
 
-  Alert.alert(
-    "Eliminar transacción",
-    "¿Estás seguro que deseas eliminar éste gasto?",
-    [
-      { text: "Cancelar", style: "cancel" },
-      { 
-        text: "Eliminar", 
-        style: "destructive", 
-        onPress: async () => {
-          try {
-            await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'expenses', id));
-          } catch (error) {
-            console.error("Error deleting expense:", error);
-            Alert.alert("Error", "No se pudo eliminar el gasto.");
-          }
-        } 
-      },
-    ]
-  );
-};
+  // --- NEW: Pagination Logic ---
+  const displayedExpenses = showAllExpenses ? expenses : expenses.slice(0, 5);
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#2563eb" /></View>;
 
@@ -294,48 +285,58 @@ export default function HomeScreen() {
 
         <View style={styles.listSection}>
           <Text style={styles.sectionTitle}>Transacciones recientes</Text>
-          {expenses.slice(0, 15).map((expense) => {
+          
+          {displayedExpenses.map((expense) => {
             const cat = categories.find(c => c.name === expense.category);
-  return (
-    <View key={expense.id} style={styles.card}>
-      <View style={styles.cardLeft}>
-        <View style={[styles.iconBox, { backgroundColor: `${cat?.hex || '#2563eb'}20` }]}>
-          <Ionicons name={(cat?.iconName || 'pricetag') as any} size={20} color={cat?.hex || '#2563eb'} />
-        </View>
-        <View>
-          <Text style={styles.cardTitle}>{expense.category}</Text>
-          <Text style={styles.cardDesc}>{expense.description}</Text>
-        </View>
-      </View>
-      <View style={styles.cardRight}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={styles.amount}>-${expense.amount.toFixed(2)}</Text>
-            <Text style={styles.dateText}>
-              {new Date(expense.date).toLocaleDateString("es-AR", { day: '2-digit', month: 'short' })}
-            </Text>
-          </View>
+            return (
+              <View key={expense.id} style={styles.card}>
+                <View style={styles.cardLeft}>
+                  <View style={[styles.iconBox, { backgroundColor: `${cat?.hex || '#2563eb'}20` }]}>
+                    <Ionicons name={(cat?.iconName || 'pricetag') as any} size={20} color={cat?.hex || '#2563eb'} />
+                  </View>
+                  <View>
+                    <Text style={styles.cardTitle}>{expense.category}</Text>
+                    <Text style={styles.cardDesc}>{expense.description}</Text>
+                  </View>
+                </View>
+                <View style={styles.cardRight}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={styles.amount}>-${expense.amount.toFixed(2)}</Text>
+                      <Text style={styles.dateText}>
+                        {new Date(expense.date).toLocaleDateString("es-AR", { day: '2-digit', month: 'short' })}
+                      </Text>
+                    </View>
 
-          {/* EDIT BUTTON */}
-                    <TouchableOpacity 
-                      onPress={() => openEditModal(expense)}
-                      style={[styles.deleteBtn, { marginRight: -8 }]} // Adjust styling as needed
-                    >
+                    <TouchableOpacity onPress={() => openEditModal(expense)} style={[styles.deleteBtn, { marginRight: -8 }]}>
                       <Ionicons name="pencil-outline" size={20} color="#1f2937" />
                     </TouchableOpacity>
                     
-          {/* Add Delete Button */}
-          <TouchableOpacity 
-            onPress={() => handleDeleteExpense(expense.id)}
-            style={styles.deleteBtn}
-          >
-            <Ionicons name="trash-outline" size={20} color="#ef4444" />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
-})}
+                    <TouchableOpacity onPress={() => handleDeleteExpense(expense.id)} style={styles.deleteBtn}>
+                      <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            );
+          })}
+
+          {/* --- NEW: Pagination Button --- */}
+          {expenses.length > 5 && (
+            <TouchableOpacity 
+              style={styles.paginationBtn} 
+              onPress={() => setShowAllExpenses(!showAllExpenses)}
+            >
+              <Text style={styles.paginationText}>
+                {showAllExpenses ? "Ver menos" : `Ver todas (${expenses.length})`}
+              </Text>
+              <Ionicons 
+                name={showAllExpenses ? "chevron-up" : "chevron-down"} 
+                size={16} 
+                color="#7c3aed" 
+              />
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
 
@@ -369,7 +370,6 @@ export default function HomeScreen() {
         visible={isAddModalOpen}
         onClose={() => {
           setIsAddModalOpen(false);
-          // Give it a tiny delay to ensure the animation finishes before nulling
           setTimeout(() => setEditingExpense(null), 100);
         }}
         onAdd={handleAddExpense}
@@ -379,35 +379,33 @@ export default function HomeScreen() {
         categories={categories}
         expenseToEdit={editingExpense}
       />
+
       <View style={styles.dockWrapper} pointerEvents="box-none">
-  <View style={styles.dockBackground}>
-    {/* Home/Summary Icon */}
-    <TouchableOpacity style={styles.dockItem}>
-      <Ionicons name="home" size={22} color="#7c3aed" />
-    </TouchableOpacity>
+        <View style={styles.dockBackground}>
+          <TouchableOpacity style={styles.dockItem}>
+            <Ionicons name="home" size={22} color="#7c3aed" />
+          </TouchableOpacity>
 
-    {/* Main Action - Centered & Elevated */}
-    <TouchableOpacity 
-      style={styles.dockMainButton} 
-      onPress={() => setIsAddModalOpen(true)}
-      activeOpacity={0.9}
-    >
-      <LinearGradient
-        colors={['#8b5cf6', '#ec4899']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.dockGradient}
-      >
-        <Ionicons name="add" size={30} color="#fff" />
-      </LinearGradient>
-    </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.dockMainButton} 
+            onPress={openNewModal} // Using updated handler
+            activeOpacity={0.9}
+          >
+            <LinearGradient
+              colors={['#8b5cf6', '#ec4899']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.dockGradient}
+            >
+              <Ionicons name="add" size={30} color="#fff" />
+            </LinearGradient>
+          </TouchableOpacity>
 
-    {/* Settings or History Icon */}
-    <TouchableOpacity style={styles.dockItem} onPress={() => setIsBudgetModalOpen(true)}>
-      <Ionicons name="options-outline" size={22} color="#94a3b8" />
-    </TouchableOpacity>
-  </View>
-</View>
+          <TouchableOpacity style={styles.dockItem} onPress={() => setIsBudgetModalOpen(true)}>
+            <Ionicons name="options-outline" size={22} color="#94a3b8" />
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 }
@@ -430,11 +428,6 @@ const styles = StyleSheet.create({
   cardRight: { alignItems: 'flex-end' },
   amount: { fontWeight: 'bold', fontSize: 16, color: '#1f2937' },
   dateText: { fontSize: 10, color: '#9ca3af', fontWeight: 'bold', marginTop: 4 },
-  fabContainer: { position: 'absolute', bottom: 30, width: '100%', alignItems: 'center' },
-  fab: {
-    width: 64, height: 64, borderRadius: 32, backgroundColor: '#000',
-    alignItems: 'center', justifyContent: 'center', elevation: 8
-  },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   budgetModal: { backgroundColor: '#fff', width: '80%', padding: 24, borderRadius: 24, alignItems: 'center' },
   modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16 },
@@ -444,11 +437,23 @@ const styles = StyleSheet.create({
   saveButton: { flex: 1, padding: 12, backgroundColor: '#7c3aed', borderRadius: 12, alignItems: 'center' },
   cancelText: { color: '#6b7280', fontWeight: 'bold' },
   saveText: { color: '#fff', fontWeight: 'bold' },
-  deleteBtn: {
-    padding: 8,
-    marginLeft: 4,
+  deleteBtn: { padding: 8, marginLeft: 4 },
+  
+  // --- Pagination Button Styles ---
+  paginationBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    marginTop: 5,
+    gap: 5,
   },
-// Dock Container
+  paginationText: {
+    color: '#7c3aed',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
   dockWrapper: {
     position: 'absolute',
     bottom: 0,
@@ -461,14 +466,13 @@ const styles = StyleSheet.create({
   },
   dockBackground: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)', // Frosted glass effect
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     width: '70%',
     height: 60,
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 15,
-    // Premium Shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
@@ -484,7 +488,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dockMainButton: {
-    marginTop: -40, // Pops the button out of the dock
+    marginTop: -40,
     shadowColor: '#ec4899',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,

@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons"; // Using Expo standard icons
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -23,60 +23,78 @@ export default function Header({
   onEditBudget,
   onLogout,
 }: HeaderProps) {
+  
+  const displayDate = viewMode === "monthly"
+    ? currentDate.toLocaleString("es-ES", { month: "long", year: "numeric" }).replace(/^\w/, (c) => c.toUpperCase())
+    : "Estado Actual";
+
   return (
     <View style={styles.container}>
-      {/* Top Row: Title & Icons */}
+      
+      {/* Top Navigation Row */}
       <View style={styles.topRow}>
-        <View>
-          <Text style={styles.subtitle}>
-            {viewMode === "monthly"
-              ? currentDate.toLocaleString("es-ES", {
-                  month: "long",
-                  year: "numeric",
-                })
-              : "Current Status"}
-          </Text>
+        <View style={styles.greetingBox}>
+          <Text style={styles.greetingText}>Hola, {user?.email?.split('@')[0] || 'Usuario'}</Text>
+          <Text style={styles.subtitle}>{displayDate}</Text>
         </View>
+
         <View style={styles.iconRow}>
           <TouchableOpacity onPress={onToggleView} style={styles.iconButton}>
             <Ionicons
-              name={viewMode === "weekly" ? "pie-chart" : "bar-chart"}
-              size={20}
-              color="#7c3aed"
+              name={viewMode === "weekly" ? "pie-chart-outline" : "bar-chart-outline"}
+              size={18}
+              color="#374151"
             />
           </TouchableOpacity>
 
-          <View style={styles.avatarContainer}>
-            <Text style={styles.avatarText}>
-              {user?.email ? user.email[0].toUpperCase() : "U"}
-            </Text>
-          </View>
-
-          <TouchableOpacity onPress={onLogout} style={styles.iconButton}>
-            <Ionicons name="log-out-outline" size={20} color="#4b5563" />
+          <TouchableOpacity onPress={onLogout} style={[styles.iconButton, styles.logoutBtn]}>
+            <Ionicons name="log-out-outline" size={18} color="#ef4444" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Stats Row */}
-      <View style={styles.statsRow}>
-        {/* Main Balance */}
-        <View>
-          <View style={styles.labelRow}>
-            <Text style={styles.label}>Balance</Text>
-            <TouchableOpacity onPress={onEditBudget} style={styles.editButton}>
-              <Ionicons name="pencil" size={12} color="#6b7280" />
-            </TouchableOpacity>
+      {/* ULTRA COMPACT CARD */}
+      <View style={styles.balanceCard}>
+        
+        {/* FIX 1: Render Decoration FIRST so it is behind content */}
+        {/* FIX 2: pointerEvents="none" ensures clicks pass through it */}
+        <View style={styles.decorativeCircle} pointerEvents="none" />
+
+        {/* Top of Card: Label and Edit */}
+        <View style={styles.cardHeader}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="wallet-outline" size={14} color="#94a3b8" />
+            <Text style={styles.cardLabel}>BALANCE DISPONIBLE</Text>
           </View>
-          <Text style={styles.balanceText}>${balance.toFixed(2)}</Text>
+          
+          {/* Edit Button */}
+          {/* Added zIndex to ensure it floats above everything */}
+          <TouchableOpacity 
+            onPress={onEditBudget} 
+            style={styles.editBtn} 
+            hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
+            activeOpacity={0.6}
+          >
+             <Ionicons name="pencil" size={14} color="#fff" />
+          </TouchableOpacity>
         </View>
 
-        {/* Expenses Side-car */}
-        <View>
-          <View style={styles.labelRow}>
-            <Text style={styles.label}>Gastado</Text>
-          </View>
-          <Text style={styles.spentText}>-${spent.toFixed(2)}</Text>
+        {/* Middle: Balance Amount - Also triggers edit */}
+        <TouchableOpacity onPress={onEditBudget} activeOpacity={0.8}>
+          <Text style={styles.balanceText}>
+            ${balance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Bottom: Spent Indicator */}
+        <View style={styles.cardFooter}>
+           <View style={styles.spentBadge}>
+              <Ionicons name="arrow-down" size={10} color="#fca5a5" />
+              <Text style={styles.spentLabel}>Gastado</Text>
+           </View>
+           <Text style={styles.spentAmount}>
+             -${spent.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+           </Text>
         </View>
       </View>
     </View>
@@ -85,21 +103,33 @@ export default function Header({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 24,
-    paddingTop: 60, // Safe area padding
-    paddingBottom: 20,
+    // Exact alignment with MonthlySummary (paddingHorizontal: 24)
+    paddingHorizontal: 24, 
+    paddingTop: 50, 
+    paddingBottom: 10, 
     backgroundColor: "#fff",
   },
+  
+  // Top Row
   topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
+    alignItems: "flex-start",
+    marginBottom: 16, 
+  },
+  greetingBox: {
+    flexDirection: 'column',
+  },
+  greetingText: {
+    fontSize: 16, 
+    fontWeight: '800',
+    color: '#1f2937',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#6b7280",
-    fontWeight: "600",
+    fontWeight: "500",
+    marginTop: 0,
   },
   iconRow: {
     flexDirection: "row",
@@ -107,55 +137,97 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   iconButton: {
-    padding: 8,
-    backgroundColor: "#f3f4f6",
-    borderRadius: 20,
-  },
-  avatarContainer: {
-    width: 32,
+    width: 32, 
     height: 32,
     backgroundColor: "#f3f4f6",
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    borderColor: "#7c3aed",
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  avatarText: {
-    color: "#7c3aed",
-    fontWeight: "bold",
-    fontSize: 12,
+  logoutBtn: {
+    backgroundColor: '#fef2f2',
   },
-  statsRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 32,
+
+  // The Card
+  balanceCard: {
+    backgroundColor: '#1e293b', 
+    borderRadius: 24, 
+    paddingVertical: 20, 
+    paddingHorizontal: 20, 
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: "#1e293b",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  labelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    height: 20,
-    marginBottom: 4,
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    position: 'relative',
+    zIndex: 10, // Ensure header is above decoration
   },
-  label: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "#9ca3af",
+  cardLabel: {
+    color: '#94a3b8',
+    fontSize: 10, 
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
-  editButton: {
-    padding: 4,
-    backgroundColor: "#f3f4f6",
-    borderRadius: 10,
+  editBtn: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 20, // Ensure button is clickable
   },
   balanceText: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#111827",
+    fontSize: 28, 
+    fontWeight: '800',
+    color: '#ffffff',
+    marginBottom: 14, 
+    letterSpacing: -0.5,
+    zIndex: 10,
   },
-  spentText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#ef4444",
-    marginTop: 8,
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderRadius: 12, 
+    paddingHorizontal: 12,
+    paddingVertical: 8, 
+    zIndex: 10,
+  },
+  spentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  spentLabel: {
+    color: '#cbd5e1',
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  spentAmount: {
+    color: '#fca5a5', 
+    fontSize: 13, 
+    fontWeight: '700',
+  },
+  
+  // Abstract shape
+  decorativeCircle: {
+    position: 'absolute',
+    top: -30,
+    right: -30,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    zIndex: 0, // Behind everything
   },
 });

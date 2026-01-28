@@ -19,38 +19,22 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase App
-// We check getApps() to avoid "App already exists" errors during hot-reloads
 const apps = getApps();
 const app = apps.length > 0 ? apps[0] : initializeApp(firebaseConfig);
 
 /**
  * Robust Auth Initialization
- * Handles React Native persistence and environment-specific restrictions.
  */
 const initAuth = () => {
   try {
-    // Try to get an existing Auth instance
-    const existingAuth = getAuth(app);
-    if (existingAuth) return existingAuth;
-  } catch (e) {
-    // Auth not initialized yet, proceed to initialize
-  }
-
-  try {
-    // Initialize with AsyncStorage persistence for mobile session management
+    // 1. ATTEMPT PERISTENCE FIRST
+    // We try to initialize with AsyncStorage immediately.
     return initializeAuth(app, {
       persistence: getReactNativePersistence(AsyncStorage),
     });
   } catch (error: any) {
-    // Fallback if already initialized or if restricted by environment (e.g., Simulator/API Key restrictions)
-    if (
-      error.code === "auth/already-initialized" ||
-      error.code === "auth/admin-restricted-operation"
-    ) {
-      return getAuth(app);
-    }
-
-    // Default fallback
+    // 2. FALLBACK
+    // If 'auth/already-initialized' (e.g. hot reload), we use the existing instance.
     return getAuth(app);
   }
 };

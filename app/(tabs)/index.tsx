@@ -133,7 +133,7 @@ export default function HomeScreen() {
   }, [expenses, categories, currentDate, periodMode]);
 
   const weeklyData = useMemo(() => {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     const today = new Date();
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(today);
@@ -282,7 +282,7 @@ export default function HomeScreen() {
                       onPress={() => openEditModal(expense)}
                       style={[styles.deleteBtn, { marginRight: -8 }]} // Adjust styling as needed
                     >
-                      <Ionicons name="pencil-outline" size={20} color="#7c3aed" />
+                      <Ionicons name="pencil-outline" size={20} color="#1f2937" />
                     </TouchableOpacity>
                     
           {/* Add Delete Button */}

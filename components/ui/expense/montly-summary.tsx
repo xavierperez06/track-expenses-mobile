@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Svg, { Circle, G, Path } from 'react-native-svg';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Svg, { Circle, G } from 'react-native-svg';
 
 interface StatsSummaryProps {
   currentDate: Date;
@@ -20,9 +20,10 @@ interface StatsSummaryProps {
   };
 }
 
-const { width } = Dimensions.get('window');
-const CHART_SIZE = width * 0.5;
+const CHART_SIZE = 140;
 const RADIUS = CHART_SIZE / 2;
+const STROKE_WIDTH = 25;
+const CIRCLE_RADIUS = RADIUS - STROKE_WIDTH / 2;
 const CENTER = RADIUS;
 
 export default function MonthlySummary({ 
@@ -33,149 +34,292 @@ export default function MonthlySummary({
   statsData 
 }: StatsSummaryProps) {
   
-  const getSlicePath = (startPercent: number, endPercent: number) => {
-    const startAngle = (startPercent / 100) * 360 - 90;
-    const endAngle = (endPercent / 100) * 360 - 90;
+  // -- Donut Logic --
+  const circumference = 2 * Math.PI * CIRCLE_RADIUS;
+  let currentAngle = 0;
 
-    const x1 = CENTER + RADIUS * Math.cos((Math.PI * startAngle) / 180);
-    const y1 = CENTER + RADIUS * Math.sin((Math.PI * startAngle) / 180);
-    const x2 = CENTER + RADIUS * Math.cos((Math.PI * endAngle) / 180);
-    const y2 = CENTER + RADIUS * Math.sin((Math.PI * endAngle) / 180);
-
-    const largeArcFlag = endPercent - startPercent > 50 ? 1 : 0;
-    return `M ${CENTER} ${CENTER} L ${x1} ${y1} A ${RADIUS} ${RADIUS} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
-  };
-
-  let cumulativePercent = 0;
+  const donutSegments = statsData.breakdown.map((cat, index) => {
+    const angle = (currentAngle / 100) * 360;
+    currentAngle += cat.percentage;
+    
+    return {
+      ...cat,
+      strokeDasharray: [circumference * (cat.percentage / 100), circumference].join(' '),
+      rotation: angle,
+    };
+  });
 
   const displayTitle = periodMode === 'month' 
-    ? currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })
+    ? currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' }).replace(/^\w/, (c) => c.toUpperCase())
     : currentDate.getFullYear().toString();
 
   return (
     <View style={styles.container}>
-      {/* Period Selector Toggle */}
-      <View style={styles.toggleContainer}>
-        <TouchableOpacity 
-          style={[styles.toggleBtn, periodMode === 'month' && styles.toggleBtnActive]}
-          onPress={() => onTogglePeriod('month')}
-        >
-          <Text style={[styles.toggleText, periodMode === 'month' && styles.toggleTextActive]}>Mes</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.toggleBtn, periodMode === 'year' && styles.toggleBtnActive]}
-          onPress={() => onTogglePeriod('year')}
-        >
-          <Text style={[styles.toggleText, periodMode === 'year' && styles.toggleTextActive]}>Año</Text>
-        </TouchableOpacity>
+      
+      {/* 1. Header & Controls */}
+      <View style={styles.headerRow}>
+        {/* Date Nav */}
+        <View style={styles.dateNav}>
+          <TouchableOpacity onPress={() => onChangeDate(-1)} style={styles.navBtn}>
+            <Ionicons name="chevron-back" size={18} color="#64748b" />
+          </TouchableOpacity>
+          <Text style={styles.dateTitle}>{displayTitle}</Text>
+          <TouchableOpacity onPress={() => onChangeDate(1)} style={styles.navBtn}>
+            <Ionicons name="chevron-forward" size={18} color="#64748b" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Period Toggle */}
+        <View style={styles.togglePill}>
+          <TouchableOpacity 
+            style={[styles.pillBtn, periodMode === 'month' && styles.pillBtnActive]}
+            onPress={() => onTogglePeriod('month')}
+          >
+            <Text style={[styles.pillText, periodMode === 'month' && styles.pillTextActive]}>Mes</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.pillBtn, periodMode === 'year' && styles.pillBtnActive]}
+            onPress={() => onTogglePeriod('year')}
+          >
+            <Text style={[styles.pillText, periodMode === 'year' && styles.pillTextActive]}>Año</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
+      {/* 2. Main Dashboard Card */}
       <View style={styles.card}>
-        {/* Date Navigator */}
-        <View style={styles.navRow}>
-          <TouchableOpacity onPress={() => onChangeDate(-1)} style={styles.navButton}>
-            <Ionicons name="chevron-back" size={20} color="#6b7280" />
-          </TouchableOpacity>
-          <Text style={styles.monthTitle}>{displayTitle}</Text>
-          <TouchableOpacity onPress={() => onChangeDate(1)} style={styles.navButton}>
-            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Visual Pie Chart */}
-        <View style={styles.chartWrapper}>
-          <View style={styles.chartContainer}>
-            {statsData.total > 0 ? (
-              <Svg width={CHART_SIZE} height={CHART_SIZE}>
-                <G>
-                  {statsData.breakdown.map((cat, idx) => {
-                    const start = cumulativePercent;
-                    cumulativePercent += cat.percentage;
-                    return (
-                      <Path
-                        key={idx}
-                        d={getSlicePath(start, cumulativePercent)}
-                        fill={cat.hex}
+        
+        {/* Content Row */}
+        <View style={styles.contentRow}>
+          
+          {/* Left: The Chart */}
+          <View style={styles.chartWrapper}>
+            <View style={{ width: CHART_SIZE, height: CHART_SIZE }}>
+              <Svg height={CHART_SIZE} width={CHART_SIZE} viewBox={`0 0 ${CHART_SIZE} ${CHART_SIZE}`}>
+                <G rotation="-90" origin={`${CENTER}, ${CENTER}`}>
+                  {statsData.total === 0 ? (
+                    // Empty State Ring (Light Gray)
+                     <Circle
+                      cx={CENTER}
+                      cy={CENTER}
+                      r={CIRCLE_RADIUS}
+                      stroke="#e2e8f0" 
+                      strokeWidth={STROKE_WIDTH}
+                      fill="transparent"
+                    />
+                  ) : (
+                    donutSegments.map((segment, i) => (
+                      <Circle
+                        key={i}
+                        cx={CENTER}
+                        cy={CENTER}
+                        r={CIRCLE_RADIUS}
+                        stroke={segment.hex}
+                        strokeWidth={STROKE_WIDTH}
+                        fill="transparent"
+                        strokeDasharray={segment.strokeDasharray}
+                        strokeDashoffset={0}
+                        rotation={segment.rotation}
+                        origin={`${CENTER}, ${CENTER}`}
+                        strokeLinecap="butt"
                       />
-                    );
-                  })}
+                    ))
+                  )}
                 </G>
               </Svg>
-            ) : (
-              <Svg width={CHART_SIZE} height={CHART_SIZE}>
-                <Circle cx={CENTER} cy={CENTER} r={RADIUS} fill="#f3f4f6" />
-              </Svg>
-            )}
-            <View style={styles.chartHole}>
-              <Text style={styles.totalLabel}>{periodMode === 'year' ? 'TOTAL ANUAL' : 'TOTAL'}</Text>
-              <Text style={styles.totalAmount}>${statsData.total.toFixed(0)}</Text>
+              {/* Inner Text (Dark for contrast) */}
+              <View style={styles.centerTextContainer}>
+                <Text style={styles.centerLabel}>TOTAL</Text>
+                <Text style={styles.centerValue}>${statsData.total.toLocaleString("es-AR", { maximumFractionDigits: 0, notation: "compact", compactDisplay: "short" })}</Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Breakdown List */}
-        <View style={styles.listContainer}>
-          {statsData.breakdown.length > 0 ? (
-            statsData.breakdown.map((cat, idx) => (
-              <View key={idx} style={styles.itemRow}>
-                <View style={styles.itemHeader}>
-                  <View style={styles.catInfo}>
-                    <View style={[styles.iconBox, { backgroundColor: `${cat.hex}15` }]}>
-                      <Ionicons name={(cat.iconName || 'pricetag') as any} size={14} color={cat.hex} />
-                    </View>
-                    <Text style={styles.catName}>{cat.name}</Text>
+          {/* Right: The Breakdown List */}
+          <View style={styles.listWrapper}>
+            {statsData.breakdown.slice(0, 4).map((cat, idx) => (
+              <View key={idx} style={styles.compactRow}>
+                <View style={[styles.dot, { backgroundColor: cat.hex }]} />
+                <View style={{ flex: 1 }}>
+                  
+                  {/* Row with Name, Amount and % */}
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                     <Text style={styles.compactName} numberOfLines={1}>{cat.name}</Text>
+                     
+                     {/* Amount & Percent grouped */}
+                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                       <Text style={styles.compactAmount}>${cat.total.toLocaleString("es-AR", { maximumFractionDigits: 0 })}</Text>
+                       <Text style={styles.compactPercent}>{cat.percentage.toFixed(0)}%</Text>
+                     </View>
                   </View>
-                  <View style={styles.catStats}>
-                    <Text style={styles.catAmount}>${cat.total.toFixed(0)}</Text>
-                    <Text style={styles.catPercent}>{cat.percentage.toFixed(0)}%</Text>
+                  
+                  {/* Tiny Progress Bar (Gray background) */}
+                  <View style={styles.miniBarBg}>
+                    <View style={[styles.miniBarFill, { width: `${cat.percentage}%`, backgroundColor: cat.hex }]} />
                   </View>
-                </View>
-                <View style={styles.progressBarBg}>
-                  <View style={[styles.progressBarFill, { width: `${cat.percentage}%`, backgroundColor: cat.hex }]} />
                 </View>
               </View>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>No hay datos para éste periodo: {periodMode}</Text>
-          )}
+            ))}
+            {statsData.breakdown.length === 0 && (
+               <Text style={styles.noDataText}>Sin gastos registrados</Text>
+            )}
+          </View>
+
         </View>
+
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 24, marginBottom: 24 },
-  toggleContainer: {
+  container: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  
+  // Header Row
+  headerRow: {
     flexDirection: 'row',
-    backgroundColor: '#f3f4f6',
-    borderRadius: 12,
-    padding: 4,
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
   },
-  toggleBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 10 },
-  toggleBtnActive: { backgroundColor: '#fff', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
-  toggleText: { fontSize: 14, fontWeight: '600', color: '#6b7280' },
-  toggleTextActive: { color: '#7c3aed' },
-  card: { backgroundColor: '#fff', borderRadius: 24, padding: 24, borderWidth: 1, borderColor: '#f3f4f6' },
-  navRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  navButton: { padding: 10, backgroundColor: '#f9fafb', borderRadius: 20 },
-  monthTitle: { fontSize: 18, fontWeight: 'bold', color: '#111827' },
-  chartWrapper: { alignItems: 'center', justifyContent: 'center', marginBottom: 32 },
-  chartContainer: { position: 'relative', width: CHART_SIZE, height: CHART_SIZE, alignItems: 'center', justifyContent: 'center' },
-  chartHole: { position: 'absolute', width: CHART_SIZE * 0.65, height: CHART_SIZE * 0.65, backgroundColor: '#fff', borderRadius: (CHART_SIZE * 0.65) / 2, alignItems: 'center', justifyContent: 'center' },
-  totalLabel: { fontSize: 9, fontWeight: 'bold', color: '#9ca3af', letterSpacing: 1 },
-  totalAmount: { fontSize: 22, fontWeight: 'bold', color: '#111827' },
-  listContainer: { gap: 20 },
-  itemRow: { gap: 8 },
-  itemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  catInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  iconBox: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  catName: { fontSize: 14, fontWeight: '700', color: '#374151' },
-  catStats: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  catAmount: { fontSize: 14, fontWeight: 'bold', color: '#111827' },
-  catPercent: { fontSize: 12, color: '#9ca3af', width: 35, textAlign: 'right', fontWeight: '600' },
-  progressBarBg: { height: 6, backgroundColor: '#f3f4f6', borderRadius: 3, overflow: 'hidden' },
-  progressBarFill: { height: '100%', borderRadius: 3 },
-  emptyText: { textAlign: 'center', color: '#9ca3af', paddingVertical: 20, fontWeight: '500' },
+  dateNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  navBtn: {
+    padding: 4,
+  },
+  dateTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0f172a',
+    textTransform: 'capitalize',
+  },
+  togglePill: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 20,
+    padding: 2,
+  },
+  pillBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 18,
+  },
+  pillBtnActive: {
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  pillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  pillTextActive: {
+    color: '#0f172a',
+    fontWeight: '700',
+  },
+
+  // Main Card - SUPER LIGHT GRAY
+  card: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 24,
+    padding: 20,
+    shadowColor: '#64748b',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1, 
+    shadowRadius: 12,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  contentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+  },
+  
+  // Left: Chart
+  chartWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  centerTextContainer: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  centerLabel: {
+    fontSize: 10,
+    color: '#64748b',
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  centerValue: {
+    fontSize: 18,
+    color: '#0f172a',
+    fontWeight: '800',
+  },
+
+  // Right: List
+  listWrapper: {
+    flex: 1,
+    gap: 16, // Increased gap for better spacing with amounts
+  },
+  compactRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start', // Align to top of text line
+    gap: 10,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginTop: 6, // Align visually with text
+  },
+  compactName: {
+    color: '#334155',
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1, // Name takes available space
+    marginRight: 8,
+  },
+  // New Styles for Amount & Percent
+  compactAmount: {
+    color: '#0f172a', // Dark/Bold for Value
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  compactPercent: {
+    color: '#94a3b8', // Gray for %
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  
+  miniBarBg: {
+    height: 4,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 2,
+    marginTop: 2, // Closer to text
+    width: '100%',
+  },
+  miniBarFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  noDataText: {
+    color: '#94a3b8',
+    fontSize: 13,
+    fontStyle: 'italic',
+  },
 });

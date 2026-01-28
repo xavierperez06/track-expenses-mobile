@@ -82,7 +82,7 @@ export default function Header({
         {/* Middle: Balance Amount - Also triggers edit */}
         <TouchableOpacity onPress={onEditBudget} activeOpacity={0.8}>
           <Text style={styles.balanceText}>
-            ${balance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ${balance.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </Text>
         </TouchableOpacity>
 
@@ -93,7 +93,7 @@ export default function Header({
               <Text style={styles.spentLabel}>Gastado</Text>
            </View>
            <Text style={styles.spentAmount}>
-             -${spent.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+             -${spent.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
            </Text>
         </View>
       </View>
